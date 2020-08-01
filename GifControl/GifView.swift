@@ -18,7 +18,7 @@ struct GifView: UIViewRepresentable {
 //        }
         return imageView
     }
-    
+
     func updateUIView(_ uiView: GIFImageView, context: Context) {
         uiView.animate(withGIFNamed: "mushroom")
     }
