@@ -56,14 +56,19 @@ extension ContentView {
                 return
             }
             
+            var count = 0
+            var value = 0
+            
             inputNode.installTap(onBus: 0, bufferSize: 160, format: inputFormat) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
+                count += 1
+                print("in callback", count)
                 if let tail = buffer.floatChannelData?[0] {
                     print("appending raw samples: ", Int(buffer.frameLength))
                     modelProcessor.stft.appendData(tail, withSamples: Int(buffer.frameLength))
                 }
                 queue.async {
                     while true {
-                        let value = modelProcessor.processNewValue()
+                        value = modelProcessor.processNewValue()
                         if (value == 11) {
                             DispatchQueue.main.async{
                                 self.currentText = "Go"
@@ -74,7 +79,7 @@ extension ContentView {
                                 self.currentText = "Stop"
                             }
                         }
-                        
+
                     }
                 }
             }

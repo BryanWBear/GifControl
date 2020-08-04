@@ -45,15 +45,6 @@ class ModelProcessor {
         inputSamples = UnsafeMutablePointer<Float>.allocate(capacity: self.inputSize)
         vDSP_vclr(inputSamples, 1, vDSP_Length(self.inputSize))
         
-//        model = {
-//            if let filePath = Bundle.main.path(forResource: "traced_model", ofType: "pt"),
-//                let module = TorchModule(fileAtPath: filePath) {
-//                return module
-//            } else {
-//                fatalError("Can't find the model file!")
-//            }
-//        }()
-        
         withUnsafePointer(to: &preload[0]) {
             up in
             if !TPCircularBufferProduceBytes(&buffer, up, Int32(self.inputSize * MemoryLayout<Float>.stride)) {
@@ -91,7 +82,7 @@ class ModelProcessor {
         // append all new fourier data
         var count = 0
         while processFourierData() { count += 1 }
-//        print("total number of samples: ", count)
+        print("total number of samples: ", count)
         
         // let UnsafeMutablePointer<Float>: samples
         var availableBytes: Int32 = 0
