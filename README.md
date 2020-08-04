@@ -12,5 +12,5 @@ The performance of the model on my iPhone XR is not that great. It seems to be q
 
 I have two future goals for the project. On the modelling side, I would like to get a workable model using some less energy intensive architectures like ResNet8 or ResNetTC. On the iOS side, I would like to get a GIF to play and stop using voice. This would be a stepping stone to other more complicated voice apps. 
 
-The reason why I am taking a break from this is mostly because reading Apple documentation and dealing with XCode issues have crushed a part of my soul. The sad part is that Swift is actually a great programming language, and I would totally use it more if I didn't feel Apple shoving its hand up my ass everytime I try to debug my code.
+The reason why I am taking a break from this is mostly because reading Apple documentation and dealing with XCode issues have crushed a part of my soul. The sad part is that Swift is actually a great programming language, and I would totally use it more if I didn't feel Apple shoving its hand up my ass everytime I try to run my code.
 
