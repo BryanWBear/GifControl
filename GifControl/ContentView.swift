@@ -13,7 +13,7 @@ struct ContentView: View {
     @ObservedObject var viewModel: ViewModel = ViewModel()
 
     var body: some View {
-        GifView().onAppear {
+        Text("Current Text: \(viewModel.currentText)").onAppear {
             do {
                 try self.viewModel.startRecording()
             }
@@ -69,11 +69,14 @@ extension ContentView {
                 queue.async {
                     while true {
                         value = modelProcessor.processNewValue()
+                        
+                        // value 11 is go
                         if (value == 11) {
                             DispatchQueue.main.async{
                                 self.currentText = "Go"
                             }
                         }
+                        // value 27 is stop
                         else if (value == 27) {
                             DispatchQueue.main.async{
                                 self.currentText = "Stop"
