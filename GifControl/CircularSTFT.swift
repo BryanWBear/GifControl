@@ -70,8 +70,9 @@ class CircularShortTimeFourierTransform
     // reusable memory
     private var complexBufferA: DSPSplitComplex
     private var complexBufferT: DSPSplitComplex
+    private let forwardDCTSetup: vDSP.DCT?
     
-    init(windowLength lengthWindow: Int = 1024, hop: Int = 0, fftSizeOf theLengthFft: Int? = nil, buffer: Int = 409600, sampleRate: Int = 44100, nMels: Int = 40) {
+    init(windowLength lengthWindow: Int = 1024, hop: Int = 0, fftSizeOf theLengthFft: Int? = nil, buffer: Int = 409600, sampleRate: Int = 44100, nMels: Int = 32) {
         // length of the fourier transform (must be a power of 2)
         self.lengthWindow = lengthWindow
         self.nMels = nMels
@@ -135,6 +136,8 @@ class CircularShortTimeFourierTransform
         if !TPCircularBufferInit(&self.buffer, Int32(buffer)) {
             fatalError("Unable to allocate circular buffer.")
         }
+        
+        self.forwardDCTSetup = vDSP.DCT(count: self.nMels, transformType: vDSP.DCTTransformType.II)!
     }
     
     deinit {
@@ -241,7 +244,15 @@ class CircularShortTimeFourierTransform
         output.append(output[0])
 //        print("fft output: ", output)
                         
-        return self.melFilters.applyFilter(powerSpectrum: &output)
+        let mel = self.melFilters.applyFilter(powerSpectrum: &output)
+        
+//        print(mel)
+        
+        let dct = self.forwardDCTSetup!.transform(mel)
+        
+//        print("dct: ", dct)
+//        print("dct count: ", dct.count)
+        return dct
         
 //        var normalized = [Float](repeating: 0, count: self.nMels)
 //        var mn: Float = 0.0

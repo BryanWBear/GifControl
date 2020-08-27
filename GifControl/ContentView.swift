@@ -37,8 +37,8 @@ extension ContentView {
 //        https://forums.developer.apple.com/thread/73560
         func startRecording() throws {
             let queue = DispatchQueue(label: "ProcessorQueue")
-            let stft = CircularShortTimeFourierTransform(windowLength: 512, hop: 160, fftSizeOf: 512, sampleRate: speechSampleRate)
-            guard let filePathModel: String = Bundle.main.path(forResource: "traced_model_luckier", ofType: "pt") else {
+            let stft = CircularShortTimeFourierTransform(windowLength: 512, hop: 320, fftSizeOf: 512, sampleRate: speechSampleRate)
+            guard let filePathModel: String = Bundle.main.path(forResource: "traced_mfcc_g", ofType: "pt") else {
                 return }
             let model = TorchModule(fileAtPath: filePathModel)!
             let modelProcessor = ModelProcessor(model: model, stft: stft, nMels: 40)
@@ -71,13 +71,13 @@ extension ContentView {
                         value = modelProcessor.processNewValue()
                         
                         // value 11 is go
-                        if (value == 11) {
+                        if (value == 8) {
                             DispatchQueue.main.async{
                                 self.currentText = "Go"
                             }
                         }
                         // value 27 is stop
-                        else if (value == 27) {
+                        else if (value == 22) {
                             DispatchQueue.main.async{
                                 self.currentText = "Stop"
                             }
