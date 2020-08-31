@@ -34,10 +34,11 @@ class ModelProcessor {
         self.stft = stft
         self.nMels = nMels
         self.inputSize = nMels * self.nWindows
+        print("input size: ", self.inputSize)
         self.model = model
         
-        // preload buffer with samples so that we can start processing immediately.
-        var preload = [Float](repeating: 0, count: self.inputSize)
+//        // preload buffer with samples so that we can start processing immediately.
+//        var preload = [Float](repeating: 1, count: self.inputSize)
         
         dummyWindow = UnsafeMutablePointer<Float>.allocate(capacity: self.inputSize)
         vDSP_vclr(dummyWindow, 1, vDSP_Length(self.inputSize))
@@ -54,12 +55,12 @@ class ModelProcessor {
 //            }
 //        }()
         
-        withUnsafePointer(to: &preload[0]) {
-            up in
-            if !TPCircularBufferProduceBytes(&buffer, up, Int32(self.inputSize * MemoryLayout<Float>.stride)) {
-                fatalError("Insufficient space on buffer.")
-            }
-        }
+//        withUnsafePointer(to: &preload[0]) {
+//            up in
+//            if !TPCircularBufferProduceBytes(&buffer, up, Int32(self.inputSize * MemoryLayout<Float>.stride)) {
+//                fatalError("Insufficient space on buffer.")
+//            }
+//        }
     }
     
     deinit {
@@ -73,7 +74,7 @@ class ModelProcessor {
             return false
         }
         
-//        print(power.count)
+//        print("power: ", power)
         self.savedSamples = self.savedSamples + power
                 
         // append data to local circular buffer
@@ -101,10 +102,11 @@ class ModelProcessor {
         }
         samples = p.bindMemory(to: Float32.self, capacity: Int(availableBytes) / MemoryLayout<Float32>.stride)
         
-        print("available bytes: ", Int(availableBytes) / MemoryLayout<Float32>.stride)
+//        print("available bytes: ", Int(availableBytes) / MemoryLayout<Float32>.stride)
         // not enough available bytes
         if Int(availableBytes) < (self.inputSize * MemoryLayout<Float>.stride) {
-            print("not enough bytes on the buffer")
+//            print("not enough bytes on the buffer")
+//            fatalError("not enough bytes on the buffer.")
             return 0
         }
 
@@ -116,11 +118,11 @@ class ModelProcessor {
         
         // mark circular buffer as consumed at END of excution
         defer {
-            print("consumed some bytes")
+//            print("consumed some bytes")
             // mark as consumed, one time per-time length
             // setting this to n so that we consume the same number of samples as we put on the buffer every cycle.
             // seems like the number changes depending on minor changes to the code.
-            TPCircularBufferConsume(&buffer, Int32(4 * self.nMels * MemoryLayout<Float>.stride))
+            TPCircularBufferConsume(&buffer, Int32(self.nMels * MemoryLayout<Float>.stride))
         }
         
         
@@ -130,12 +132,13 @@ class ModelProcessor {
         // argmax, may need to do some guards here.
         currentPrediction = preds.indices.max(by: { preds[$0] < preds[$1] }) ?? -1
         
-        print(currentPrediction)
-        print("maxValue = ", preds.max() ?? -1)
+//        print("preds: ", preds)
+//        print(currentPrediction)
+//        print("maxValue = ", preds.max() ?? -1)
         
         
         // set arbitrary threshold instead of doing a softmax, for speed purposes
-        if (preds.max() ?? -1 > 10) {
+        if (preds.max() ?? -1 > 5) {
             return currentPrediction
         }
         return 0

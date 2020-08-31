@@ -32,16 +32,23 @@ extension ContentView {
         var count: Int = 0
         let speechSampleRate: Int = 16000
         
+        // configs to avoid future bugs:
+        let nMels: Int = 32
+        let fftSize: Int = 512
+        
+        // 20 ms aka 320 samples at 16kHz
+        let hopLength: Int = 320
+        
         
 //        golden advice
 //        https://forums.developer.apple.com/thread/73560
         func startRecording() throws {
             let queue = DispatchQueue(label: "ProcessorQueue")
-            let stft = CircularShortTimeFourierTransform(windowLength: 512, hop: 320, fftSizeOf: 512, sampleRate: speechSampleRate)
-            guard let filePathModel: String = Bundle.main.path(forResource: "traced_mfcc_g", ofType: "pt") else {
+            let stft = CircularShortTimeFourierTransform(windowLength: fftSize, hop: hopLength, fftSizeOf: fftSize, sampleRate: speechSampleRate, nMels: nMels)
+            guard let filePathModel: String = Bundle.main.path(forResource: "traced_tc_4", ofType: "pt") else {
                 return }
             let model = TorchModule(fileAtPath: filePathModel)!
-            let modelProcessor = ModelProcessor(model: model, stft: stft, nMels: 40)
+            let modelProcessor = ModelProcessor(model: model, stft: stft, nMels: nMels)
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
             try audioSession.setPreferredSampleRate(Double(speechSampleRate))
@@ -63,26 +70,50 @@ extension ContentView {
                 count += 1
                 print("in callback", count)
                 if let tail = buffer.floatChannelData?[0] {
-                    print("appending raw samples: ", Int(buffer.frameLength))
+//                    print("appending raw samples: ", Int(buffer.frameLength))
                     modelProcessor.stft.appendData(tail, withSamples: Int(buffer.frameLength))
                 }
                 queue.async {
                     while true {
                         value = modelProcessor.processNewValue()
-                        
-                        // value 11 is go
-                        if (value == 8) {
+//                        DispatchQueue.main.async{
+//                            self.currentText = String(value)
+//                        }
+                        // value 8 is go TODO: put these in the config
+                        if (value == 1) {
                             DispatchQueue.main.async{
                                 self.currentText = "Go"
                             }
                         }
-                        // value 27 is stop
-                        else if (value == 22) {
+                        // value 5 is stop
+                        else if (value == 6) {
                             DispatchQueue.main.async{
                                 self.currentText = "Stop"
                             }
                         }
-
+                        // prev 3 (traced_tc_3)
+                        else if (value == 4) {
+                            DispatchQueue.main.async{
+                                self.currentText = "One"
+                            }
+                        }
+                        // prev 7
+                        else if (value == 8) {
+                            DispatchQueue.main.async{
+                                self.currentText = "Two"
+                            }
+                        }
+                        // prev 6
+                        else if (value == 7) {
+                            DispatchQueue.main.async{
+                                self.currentText = "Three"
+                            }
+                        }
+                        else if (value == 3) {
+                            DispatchQueue.main.async{
+                                self.currentText = "Next"
+                            }
+                        }
                     }
                 }
             }

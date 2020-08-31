@@ -61,14 +61,41 @@ class Melcepstrum {
         let flatFilterBank = filterBank.reduce([], +)
         return flatFilterBank
     }
+    
+    func onePowerToDb(power : Float, amin: Float = 1e-10) -> Float {
+        if (power < amin) {
+            return 10.0 * log10(amin)
+        }
+        return 10.0 * log10(power)
+    }
 
-    func applyFilter(powerSpectrum: UnsafeMutablePointer<Float>) -> [Float] {
+    func powerToDb(spectrum : [Float], topdB : Float = 80.0) -> [Float]{
+        var logSpec = spectrum.map { (power) -> Float in
+            onePowerToDb(power: power)
+        }
+        
+        let maxVal = logSpec.max()!
+        logSpec = logSpec.map { (db) -> Float in
+            if (db < maxVal - topdB) {
+                return maxVal - topdB
+            }
+            return db
+        }
+        return logSpec
+    }
+    
+    func applyFilter(powerSpectrum: UnsafeMutablePointer<Float>, scaleForMFCC: Bool = true) -> [Float] {
         var outputMels = [Float](repeating: 0.0, count: self.nMels)
         
         // use cblas_sgemv? or dgemv
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, Int32(self.nMels), 1, Int32(self.nFFT / 2 + 1), 1.0,
                     &self.melFilters, Int32(self.nFFT / 2 + 1), powerSpectrum, 1, 0.0, &outputMels, 1)
+        
+//        print("raw mels: ", outputMels)
                 
+        if scaleForMFCC {
+            return powerToDb(spectrum: outputMels)
+        }
         return outputMels
     }
 }

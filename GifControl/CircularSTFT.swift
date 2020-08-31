@@ -137,7 +137,17 @@ class CircularShortTimeFourierTransform
             fatalError("Unable to allocate circular buffer.")
         }
         
+        // preload buffer as a test
+//        var preload = [Float](repeating: 1, count: 20000)
+        
         self.forwardDCTSetup = vDSP.DCT(count: self.nMels, transformType: vDSP.DCTTransformType.II)!
+        
+//        withUnsafePointer(to: &preload[0]) {
+//            up in
+//            if !TPCircularBufferProduceBytes(&self.buffer, up, Int32(20000 * MemoryLayout<Float>.stride)) {
+//                fatalError("Insufficient space on buffer.")
+//            }
+//        }
     }
     
     deinit {
@@ -246,13 +256,19 @@ class CircularShortTimeFourierTransform
                         
         let mel = self.melFilters.applyFilter(powerSpectrum: &output)
         
-//        print(mel)
+//        print("mels : ", mel)
         
         let dct = self.forwardDCTSetup!.transform(mel)
         
 //        print("dct: ", dct)
 //        print("dct count: ", dct.count)
-        return dct
+//        return dct
+        return (0..<self.nMels).map { (i) -> Float in
+            if (i == 0) {
+                return dct[i] / sqrt(Float(self.nMels))
+            }
+            return dct[i] * sqrt(2.0 / Float(self.nMels))
+        }
         
 //        var normalized = [Float](repeating: 0, count: self.nMels)
 //        var mn: Float = 0.0

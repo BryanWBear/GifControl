@@ -27,10 +27,10 @@
 
 - (NSArray<NSNumber*>*)predictImage:(void*)imageBuffer {
   try {
-
-      at::Tensor tensor = torch::from_blob(imageBuffer, {51, 32}, at::kFloat).transpose(1, 0).unsqueeze(0);
+      at::Tensor tensor = torch::from_blob(imageBuffer, {51, 32}, at::kFloat).unsqueeze(0).unsqueeze(0);
+//      at::Tensor tensor = torch::from_blob(imageBuffer, {51, 32}, at::kFloat).transpose(1, 0).unsqueeze(0);
 //    at::Tensor tensor = torch::from_blob(imageBuffer, {16000}, at::kFloat).unsqueeze(0);
-//      at::Tensor tensor = torch::ones({1, 16000});
+//      at::Tensor tensor = torch::ones({1, 32, 51});
 //    tensor -= (tensor.mean(0) + 1e-8);
 //    tensor /= ((tensor.pow(2).sum(0)/40).sqrt() + 1e-8);   // mean-scaling first does not change the standard deviation.
 //    tensor = tensor.reshape({1, -1, 40});
@@ -42,7 +42,7 @@
       return nil;
     }
     NSMutableArray* results = [[NSMutableArray alloc] init];
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 9; i++) {
       [results addObject:@(floatBuffer[i])];
     }
     return [results copy];
