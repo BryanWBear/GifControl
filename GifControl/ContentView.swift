@@ -7,18 +7,45 @@
 //
 
 import SwiftUI
-import AVFoundation
+import StoreKit
+import MediaPlayer
 
 struct ContentView: View {
+    @State private var selection = 0
+    @State private var musicPlayer = MPMusicPlayerController.applicationMusicPlayer
+    @State private var currentSong = Song(id: "", name: "", artistName: "", artworkURL: "")
     @ObservedObject var viewModel: ViewModel = ViewModel()
-
+ 
     var body: some View {
-        Text("Current Text: \(viewModel.currentText)").onAppear {
+        TabView(selection: $selection){
+            PlayerView(musicPlayer: self.$musicPlayer, currentSong: self.$currentSong, isPlaying: $viewModel.isPlaying)
+                .tag(0)
+                .tabItem {
+                    VStack {
+                        Image(systemName: "music.note")
+                        Text("Player")
+                    }
+                }
+            SongView(musicPlayer: self.$musicPlayer, currentSong: self.$currentSong)
+                .tag(1)
+                .tabItem {
+                    VStack {
+                        Image(systemName: "magnifyingglass")
+                        Text("Search")
+                    }
+                }
+        }.accentColor(.pink)
+        .onAppear() {
             do {
                 try self.viewModel.startRecording()
             }
             catch {
                 print("cannot record")
+            }
+            SKCloudServiceController.requestAuthorization { (status) in
+                if status == .authorized {
+                    print(AppleMusicAPI().searchAppleMusic("Taylor Swift"))
+                }
             }
         }
     }
@@ -27,6 +54,7 @@ struct ContentView: View {
 extension ContentView {
     class ViewModel: ObservableObject {
         @Published var currentText = "No Input"
+        @Published var isPlaying = false
         let audioEngine = AVAudioEngine()
         var savedBuff: [Float] = []
         var count: Int = 0
@@ -50,7 +78,7 @@ extension ContentView {
             let model = TorchModule(fileAtPath: filePathModel)!
             let modelProcessor = ModelProcessor(model: model, stft: stft, nMels: nMels)
             let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.mixWithOthers, .allowBluetooth])
             try audioSession.setPreferredSampleRate(Double(speechSampleRate))
 
 //          want a 10 ms hop (160 samples for a SR of 16000)
@@ -82,13 +110,15 @@ extension ContentView {
                         // value 8 is go TODO: put these in the config
                         if (value == 1) {
                             DispatchQueue.main.async{
-                                self.currentText = "Go"
+                                self.isPlaying = true
+                                print("go!!!!")
                             }
                         }
                         // value 5 is stop
                         else if (value == 6) {
                             DispatchQueue.main.async{
-                                self.currentText = "Stop"
+                                self.isPlaying = false
+                                print("stop!!!")
                             }
                         }
                         // prev 3 (traced_tc_3)
